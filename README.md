@@ -26,7 +26,8 @@ This project builds a **complete prediction pipeline**: from raw agronomy data t
 
 ## Demo
 
-*(Demo image placeholder - Add screenshot to `screenshots/` directory)*
+![Uploading image.png…]()
+
 
 ---
 
