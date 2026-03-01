@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
+import subprocess
 import matplotlib.pyplot as plt
 # --- Page Config ---
 st.set_page_config(page_title="Crop Yield Predictor", page_icon="🌾", layout="wide")
@@ -18,10 +19,28 @@ for file in [MODEL_PATH, SCALER_PATH, COLUMNS_PATH]:
         missing_files.append(file)
 
 if missing_files:
-    st.error(f"Missing required model files: {', '.join(missing_files)}")
-    st.warning("Please export these from the Google Colab notebook and place them in the application folder.")
-    st.info("Code to run in Colab:\n```python\nimport joblib\njoblib.dump(rf_model, 'model.pkl')\njoblib.dump(scaler, 'scaler.pkl')\njoblib.dump(X_train.columns.tolist(), 'model_columns.pkl')\n```")
-    st.stop()
+    # --- Auto-Train Bootstrapper ---
+    # Because model.pkl is 3.6GB, it cannot be hosted on GitHub.
+    # Therefore, when this app boots in Streamlit Cloud, the file will be missing.
+    # We catch the missing file and automatically train the model on the cloud server!
+    st.warning(f"Initial Setup: Generating ML Models ({', '.join([os.path.basename(f) for f in missing_files])})")
+    
+    with st.spinner("Training Random Forest AI... This might take 1-2 minutes for the first boot!"):
+        try:
+            # Run the training script via subprocess so it acts as an independent execution thread
+            # capture_output=False allows Streamlit Cloud logs to show the training progress
+            subprocess.run(["python3", "src/train_local.py"], check=True)
+            st.success("✅ Agronomy Engine successfully trained and initialized!")
+            st.rerun()
+        except Exception as e:
+            try:
+                subprocess.run(["python", "src/train_local.py"], check=True)
+                st.success("✅ Agronomy Engine successfully trained and initialized!")
+                st.rerun()
+            except Exception as e2:
+                st.error("Failed to run the training script dynamically.")
+                st.code(str(e2))
+                st.stop()
 
 @st.cache_resource
 def load_models():

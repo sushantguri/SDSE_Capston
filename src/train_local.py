@@ -4,11 +4,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
 import joblib
 
+import os
+
 # Check if dataset exists
+data_path = "data/crop_yield.csv"
 try:
-    df = pd.read_csv('crop_yield.csv')
+    df = pd.read_csv(data_path)
 except FileNotFoundError:
-    print("Please download 'crop_yield.csv' into this folder first from Kaggle!")
+    print(f"Please download 'crop_yield.csv' into {data_path} first from Kaggle!")
     exit()
 
 print("Loaded Data. Processing...")
@@ -43,8 +46,11 @@ rf_model.fit(X_train, y_train)
 print(f"R2 Score: {rf_model.score(X_test, y_test):.4f}")
 
 print("Saving Models...")
-joblib.dump(rf_model, '../models/model.pkl')
-joblib.dump(scaler, '../models/scaler.pkl')
-joblib.dump(X_train.columns.tolist(), '../models/model_columns.pkl')
+models_dir = 'models'
+os.makedirs(models_dir, exist_ok=True)
+
+joblib.dump(rf_model, os.path.join(models_dir, 'model.pkl'))
+joblib.dump(scaler, os.path.join(models_dir, 'scaler.pkl'))
+joblib.dump(X_train.columns.tolist(), os.path.join(models_dir, 'model_columns.pkl'))
 
 print("\n🚀 Models saved successfully! You can now start the Streamlit app.")
